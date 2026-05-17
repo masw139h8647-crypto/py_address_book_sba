@@ -3,6 +3,8 @@ import json
 import tkinter as tk
 from tkinter import ttk
 from functools import partial
+import sys
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 root=tk.Tk()
 datatype=["Name","Address","Group","Age"]
 list0=[] 
