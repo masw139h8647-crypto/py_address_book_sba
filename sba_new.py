@@ -3,10 +3,10 @@ import json
 import tkinter as tk
 from tkinter import ttk
 from functools import partial
-import sys
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 root=tk.Tk()
 datatype=["Name","Address","Group","Age"]
+catch=False
 list0=[] 
 find=[""]
 abandon=[""]
@@ -15,21 +15,18 @@ findpage=0
 nextpage=False
 backpage=False
 button_list=[]
-delete_list=[]
 l11=[]
 list2=[]
 list4=[["",0,"","",False,False,False],["","","","",False,False,False],["","","","",False,True,True],[125,0,"","",True,False,False]]
 list5=[[],[],["a","b","c","d"],[]]
-file=os.path.join(os.getcwd(),"data.json")
 if os.path.exists("save.json"):
     if os.path.getsize("save.json")>0:
         with open("save.json","r") as f:
             loaded_save=json.load(f)
             datatype=loaded_save[0]
             list0=loaded_save[1]
-            delete_list=loaded_save[2]
-            list4=loaded_save[3]
-            list5=loaded_save[4]
+            list4=loaded_save[2]
+            list5=loaded_save[3]
 def option(x,y):
     global l11get,b19,l11,l11c,b19c
     if y==0:
@@ -115,10 +112,10 @@ def check(x,y):
         var2=tk.StringVar()
         ckb2=tk.Checkbutton(window1, text="only number",variable=var2, onvalue=True, offvalue=False,command=word)
         ckb2.grid(column=1,row=1)
-        if list4[x][4]==False:
-            ckb2.deselect()
-        else:
+        if list4[x][4]==True:
             ckb2.select()
+        else:
+            ckb2.deselect()
         l8=tk.Label(window1)
         l8.grid(column=0,row=3)
         l9=tk.Label(window1)
@@ -265,13 +262,13 @@ def addsub(x):
     b10.grid(column=0,row=1)
 def gets():
     list2.append(e2.get())
-    list4.append(["","","","",""])
+    list4.append(["","","","","","",""])
     list5.append([[]])
 def looks(t):
     global findpage
     findpage=findpage+t
 def finding(w):
-    global e0,find,abandon,list1,l2,l3,button_list,page,np,bp,findpage,nextpage,backpage,u
+    global e0,find,abandon,list1,l2,l3,button_list,page,np,bp,findpage,nextpage,backpage,u,catch
     if nextpage==True:
         np.destroy()
         nextpage=False
@@ -279,6 +276,8 @@ def finding(w):
         bp.destroy()
         backpage=False
     u=0
+    if w!=2:
+        findpage=0
     for btn in button_list:
         btn.destroy()
     button_list=[]
@@ -291,24 +290,52 @@ def finding(w):
         l3.destroy()
         l3=tk.Label(frame)
         l3.grid(column=2,row=2)
-    if w==0 and e0.get()!="!ERROR":
+        catch=True
+    else:
+        catch=False
+    if w==0 and catch==False:
         if find[0]=="":
             find[0]=e0.get()
         else:
-            find.append(e0.get())
-        l2.config(text=("+",find))
-    if w==1 and e0.get()!="!ERROR":
+            if e0.get() not in find:
+                find.append(e0.get())
+            else:
+                find.remove(e0.get())
+                if len(find)==0:
+                    find=[""]
+        if find!=[""]:
+            l2.config(text=("+",find))
+        else:
+            l2.destroy()
+            l2=tk.Label(frame)
+            l2.grid(column=0,row=2)
+    if w==1 and catch==False:
         if abandon[0]=="":
             abandon[0]=e0.get()
         else:
-            abandon.append(e0.get())
-        l3.config(text=("-",abandon))
+            if e0.get() not in abandon:
+                abandon.append(e0.get())
+            else:
+                abandon.remove(e0.get())
+                if len(abandon)==0:
+                    abandon=[""]
+                    if abandon[0]=="":
+                        look(0)
+        if abandon!=[""]:
+            l3.config(text=("-",abandon))
+        else:
+            l3.destroy()
+            l3=tk.Label(frame)
+            l3.grid(column=2,row=2)
+    if find[0]=="" and abandon[0]=="":
+        look(0)
+        return
     if w==2 or e0.get()!="":
         for x in range (0,len(list0)):
             build=1
             count=0
             for i in range (0,len(list0[x])):
-                if e0.get()=="!ERROR":
+                if catch:
                     if list4[i][4]==True:
                         try:
                             if list4[i][0]=="" or int(list0[x][i])<int(list4[i][0]):
@@ -336,7 +363,7 @@ def finding(w):
                                     build=0
                         if count==0 and j==len(list0[x])-1:
                             build=0
-            if (e0.get()=="!ERROR" and w==0) or e0.get()!="!ERROR":
+            if (catch and w==0) or catch==False:
                 if build==1:
                     u=u+1
                     if u>findpage*10 and u<=(findpage+1)*10:
@@ -373,9 +400,8 @@ def finding(w):
 def order(x):
     if x==0:
         list0.sort(reverse=True)
-    if x==1:
+    else:
         list0.sort()
-    print(list0)
 def look(c):
     global button_list,np,bp,page,nextpage,backpage
     for btn in button_list:
@@ -415,7 +441,6 @@ def look(c):
     printpage()
 def see(z):
     global e3
-    print(list4)
     see=tk.Tk()
     height=20*len(datatype)+30
     see.geometry(f"255x{height}")
@@ -427,9 +452,13 @@ def see(z):
         e3.append(tk.Entry(see))
         e3[i].grid(column=1,row=i)
         e3[i].insert(0,list0[z][i])
-    b11=tk.Button(see,text="delete",command=lambda:[revamp(z,0),look(0),finding(2),see.destroy()])
+    if find==[""] and abandon==[""] and catch==False:
+        b11=tk.Button(see,text="delete",command=lambda:[revamp(z,0),look(0),see.destroy()])
+        b12=tk.Button(see,text="change",command=lambda:[revamp(z,1),look(0),see.destroy()])
+    else:
+        b11=tk.Button(see,text="delete",command=lambda:[revamp(z,0),look(0),finding(2),see.destroy()])
+        b12=tk.Button(see,text="change",command=lambda:[revamp(z,1),look(0),finding(2),see.destroy()])
     b11.grid(column=0,row=len(datatype))
-    b12=tk.Button(see,text="change",command=lambda:[revamp(z,1),look(0),finding(2),see.destroy()])
     b12.grid(column=2,row=len(datatype))
 def revamp(z,x):
     global list0
@@ -438,23 +467,6 @@ def revamp(z,x):
             list0[z][i]=""
         else:
             list0[z][i]=e3[i].get()
-def addn():
-    global button_list,np,nextpage,list0
-    if len(list0)<=10:
-        saw=partial(see,(len(list0)-1))
-        d=tk.Button(root,text=list0[-1][0],command=saw)
-        d.pack(fill='x', ipady=2)
-        button_list.append(d)
-    else:
-        if len(list0)==11:
-            np=tk.Button(root,text=" ⭢ ",command=lambda:look(1))
-            np.pack(side="right")
-            nextpage=True
-        else:
-            look(0)
-    printpage()
-    look(0)
-    print(list0)
 def adding():
     global e1,l11,window,cho
     window=tk.Toplevel()
@@ -483,6 +495,7 @@ def adding():
         l11[i].grid(column=2,row=i)
     b6=tk.Button(window,text="Ok",command=lambda:[get()])
     b6.pack(anchor="ne")
+    printpage()
 def get():
     global e1,l11,cho
     list1=[]
@@ -498,7 +511,6 @@ def get():
     for i in range (0,len(datatype)):
         l11[i].config(text="")
     for i in range (0,len(datatype)):
-        print(len(list1[i]),list4[i])
         if list4[i][4]==True:
             try:
                 if list4[i][0]!="" and int(list1[i])>=int(list4[i][0]):
@@ -526,13 +538,15 @@ def get():
             break
         if i==len(datatype)-1:
             list0.append(list1)
-            addn()
+            printpage()
+            look(0)
             cho=[]
             e1=[]
             l11=[]
             window.destroy()
 def printpage():
-    if find[0]=="" and abandon[0]=="" and e0.get()!="!ERROR":
+    global catch
+    if find[0]=="" and abandon[0]=="" and catch==False:
         if len(list0)%10==0:
             ab.set("page:"+str(page+1)+"/"+str(len(list0)//10))
         else:
@@ -549,10 +563,35 @@ def printpage():
             else:
                 ab.set("page:"+str(page+1)+"/"+str(1+(len(list0))//10))
 def close():
-    save=[datatype,list0,delete_list,list4,list5]
+    save=[datatype,list0,list4,list5]
     with open("save.json","w") as f:
         json.dump(save,f)
     root.destroy()
+def goto():
+    try:
+        if find[0]=="" and abandon[0]=="" and catch==False:
+            if e0.get()=="":
+                look(-page)
+            elif len(list0)%10==0:
+                if (int(e0.get())-page-1)<=(len(list0)//10):
+                    look(int(e0.get())-page-1)
+            else:
+                if (int(e0.get())-page-1)<=(1+len(list0)//10):
+                    look(int(e0.get())-page-1)
+        else:
+            if e0.get()=="":
+                looks(-findpage)
+                finding(2)
+            elif len(list0)%10==0:
+                if (int(e0.get())-findpage)<=(len(list0)//10):
+                    looks(int(e0.get())-findpage-1)
+                    finding(2)
+            else:
+                if (int(e0.get())-findpage)<=(1+(len(list0))//10):
+                    looks(int(e0.get())-findpage-1)
+                    finding(2)
+    except ValueError:
+        pass
 frame=tk.Frame(root)
 frame.pack()
 root.title("Address list")
@@ -560,20 +599,22 @@ root.geometry("300x430")
 root.protocol("WM_DELETE_WINDOW",close)
 l=tk.Label(frame, text="Search")
 l.grid(column=0,row=0)
-b=tk.Button(frame,text="🔍",command=lambda:finding(0))
+b=tk.Button(frame,text=" 🔍 ",command=lambda:finding(0))
 b.grid(column=2,row=0)
-b1=tk.Button(frame,text="🗑",command=lambda:finding(1))
+b1=tk.Button(frame,text=" 🗑 ",command=lambda:finding(1))
 b1.grid(column=3,row=0)
 e0=tk.Entry(frame)
 e0.grid(column=1,row=0)
 b2=tk.Button(root,text="⚙",command=lambda:setting(0))
 b2.pack(anchor="ne")
-b3=tk.Button(frame, text=" ⭡ ",command=lambda:[order(0),finding(2),look(-page)])
+b3=tk.Button(frame, text="  ⭡  ",command=lambda:[order(0),finding(2),look(-page)])
 b3.grid(column=0,row=1)
 b4=tk.Button(frame, text="📞add",command=lambda:adding())
 b4.grid(column=1,row=1)
-b5=tk.Button(frame, text=" ⭣ ",command=lambda:[order(1),finding(2),look(-page)])
+b5=tk.Button(frame, text="  ⭣  ",command=lambda:[order(1),finding(2),look(-page)])
 b5.grid(column=2,row=1)
+b20=tk.Button(frame,text="go",command=lambda:goto())
+b20.grid(column=3,row=1)
 l2=tk.Label(frame)
 l2.grid(column=0,row=2)
 ab=tk.StringVar()
@@ -583,4 +624,4 @@ l5.grid(column=1,row=2)
 l3=tk.Label(frame)
 l3.grid(column=2,row=2)
 look(0)
-root.mainloop()
+root.mainlo
